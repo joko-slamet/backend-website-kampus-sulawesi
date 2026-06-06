@@ -1,0 +1,54 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String
+  role      String   @default("admin")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Article {
+  id            String   @id
+  category      String
+  categoryColor String
+  date          String
+  readTime      String
+  title         String
+  excerpt       String
+  tag           String?
+  tagColor      String?
+  titleEn       String
+  excerptEn     String
+  views         Int      @default(0)
+  published     Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Program {
+  id            String   @id
+  icon          String
+  badge         String
+  badgeColor    String
+  name          String
+  degree        String
+  accreditation String
+  description   String
+  highlights    String[]
+  color         String
+  bgGradient    String
+  alumni        String
+  status        String   @default("aktif")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}

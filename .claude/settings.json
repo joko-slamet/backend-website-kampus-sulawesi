@@ -2,7 +2,13 @@
   "permissions": {
     "allow": [
       "Bash(sed -n '148,165p' /home/joko/projects/website-kampus-sulawesi/app/components/CTASection.tsx)",
-      "Bash(sed -n '1,30p' /home/joko/projects/website-kampus-sulawesi/app/components/ContactSection.tsx)"
+      "Bash(sed -n '1,30p' /home/joko/projects/website-kampus-sulawesi/app/components/ContactSection.tsx)",
+      "Bash(sed -i 's/STIMIK Nusantara Sulawesi/STIA Abdul Haris Makassar/g' app/components/NewsSection.tsx app/artikel/data.ts app/artikel/content.ts app/login/page.tsx)",
+      "Bash(sed -i 's/STIMIK Nusantara/STIA Abdul Haris/g' app/components/AboutSection.tsx app/components/NewsSection.tsx app/artikel/data.ts app/artikel/content.ts app/login/LoginForm.tsx app/login/page.tsx app/dashboard/DashboardShell.tsx)",
+      "Bash(sed -i 's/STIMIK Abdul Haris/STIA Abdul Haris/g' app/artikel/content.ts)",
+      "Bash(sed -i 's/STIMIK/STIA/g' app/dashboard/layout.tsx app/artikel/data.ts app/artikel/content.ts app/components/NewsSection.tsx)",
+      "Bash(curl -s http://localhost:4000/health -w \"\\\\n\")",
+      "Bash(npx playwright *)"
     ]
   }
 }

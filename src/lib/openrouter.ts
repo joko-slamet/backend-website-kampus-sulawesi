@@ -36,14 +36,14 @@ const CATEGORY_COLORS: Record<string, string> = {
 
 // Hint untuk image generation berdasarkan kategori
 const CATEGORY_IMAGE_HINTS: Record<string, string> = {
-  Teknologi: 'modern computer lab, coding on screen, software development, digital technology',
-  Akademik: 'university lecture hall, students studying, academic setting, Indonesia college',
-  Mahasiswa: 'diverse college students on campus, young people learning, campus life Indonesia',
-  Berita: 'university campus building, Indonesian higher education institution, campus exterior',
-  Prestasi: 'graduation ceremony, academic achievement award, proud students with certificates',
-  Kegiatan: 'student campus event, group activity, community gathering at university',
-  Riset: 'research laboratory, scientific equipment, student researcher, technology lab',
-  Pengabdian: 'community service volunteers, students helping local community, Indonesia outreach',
+  Teknologi: 'e-government digital transformation, public administration technology, modern government office Indonesia',
+  Akademik: 'university lecture hall, students studying administration, academic setting Makassar Indonesia',
+  Mahasiswa: 'diverse college students on campus, young people learning, campus life Makassar Sulawesi',
+  Berita: 'university campus building Makassar, Indonesian higher education institution, campus exterior Sulawesi Selatan',
+  Prestasi: 'graduation ceremony, academic achievement award, proud students with certificates, Indonesia university',
+  Kegiatan: 'student campus event, group activity, community gathering at university Makassar',
+  Riset: 'public policy research, administrative governance study, government analysis, Indonesia university',
+  Pengabdian: 'community service volunteers, students helping local community, public service Indonesia, Sulawesi outreach',
 };
 
 function resolveCategoryColor(category: string): string {
@@ -73,7 +73,7 @@ async function generateImage(titleEn: string, category: string): Promise<string 
         Authorization: `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
         'HTTP-Referer': process.env.APP_URL ?? 'http://localhost:4000',
-        'X-Title': 'STIMIK Nusantara CMS',
+        'X-Title': 'STIA Abdul Haris CMS',
       },
       body: JSON.stringify({
         model: imageModel,
@@ -112,24 +112,23 @@ export async function generateArticle(options: GenerateArticleOptions): Promise<
 
   const model = process.env.OPENROUTER_MODEL ?? 'google/gemma-2-9b-it:free';
 
-  const systemPrompt = `Kamu adalah editor konten resmi untuk website STIMIK Nusantara Sulawesi.
+  const systemPrompt = `Kamu adalah editor konten resmi untuk website STIA YPA-AH "Abdul Haris" Makassar.
 
 Profil kampus:
-- Nama: STIMIK Nusantara Sulawesi
-- Lokasi: Sulawesi, Indonesia
+- Nama: STIA YPA-AH "Abdul Haris" Makassar
+- Lokasi: Makassar, Sulawesi Selatan, Indonesia
 - Program studi aktif:
-  • S1 Sistem Informasi (Akreditasi A) — 2.800+ alumni
-  • S1 Teknik Informatika (Akreditasi A) — 3.100+ alumni
-  • D3 Manajemen Informatika (Akreditasi B) — 4.200+ alumni
-  • D3 Komputerisasi Akuntansi (Akreditasi B) — 1.900+ alumni
-- Keunggulan: Business Intelligence, Machine Learning, Cloud Computing, Cybersecurity, ERP, Digital Transformation
+  • S1 Ilmu Administrasi Negara / Administrasi Publik
+  • S1 Ilmu Administrasi Niaga / Administrasi Bisnis
+- Akreditasi: BAIK (BAN-PT)
+- Keunggulan: tata kelola pemerintahan, kebijakan publik, manajemen bisnis, administrasi negara, pelayanan publik, kepemimpinan organisasi
 
-Tugas: Pilih topik artikel yang relevan dengan kampus ini (teknologi, pendidikan, mahasiswa, karier IT, riset, atau kegiatan kampus) lalu tulis konten yang informatif, menarik, dan profesional.
+Tugas: Pilih topik artikel yang relevan dengan kampus administrasi ini (kebijakan publik, tata kelola, manajemen bisnis, kehidupan mahasiswa, karier, riset administrasi, atau kegiatan kampus) lalu tulis konten yang informatif, menarik, dan profesional.
 Balas HANYA dengan JSON valid, tanpa markdown atau kode blok.`;
 
   const topicInstruction = options.topic
     ? `Tulis artikel dengan topik: "${options.topic}".`
-    : `Pilih sendiri topik artikel yang relevan, segar, dan menarik. Variasikan topik — jangan hanya tentang teknologi, sesekali tentang kehidupan mahasiswa, karier, atau kegiatan kampus.`;
+    : `Pilih sendiri topik artikel yang relevan, segar, dan menarik. Variasikan topik — misalnya kebijakan publik, tata kelola daerah, karier administrasi, kehidupan mahasiswa, atau kegiatan kampus.`;
 
   const categoryHint = options.category ? `Gunakan kategori: ${options.category}.` : '';
 
@@ -152,7 +151,7 @@ Hasilkan JSON:
       Authorization: `Bearer ${apiKey}`,
       'Content-Type': 'application/json',
       'HTTP-Referer': process.env.APP_URL ?? 'http://localhost:4000',
-      'X-Title': 'STIMIK Nusantara CMS',
+      'X-Title': 'STIA Abdul Haris CMS',
     },
     body: JSON.stringify({
       model,

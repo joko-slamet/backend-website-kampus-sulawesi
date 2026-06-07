@@ -43,6 +43,12 @@ model SchedulerConfig {
   updatedAt DateTime @updatedAt
 }
 
+model WhatsappClickLog {
+  id        String   @id @default(cuid())
+  page      String   @default("/")
+  createdAt DateTime @default(now())
+}
+
 model Program {
   id            String   @id
   icon          String

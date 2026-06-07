@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(sed -n '148,165p' /home/joko/projects/website-kampus-sulawesi/app/components/CTASection.tsx)",
+      "Bash(sed -n '1,30p' /home/joko/projects/website-kampus-sulawesi/app/components/ContactSection.tsx)"
+    ]
+  }
+}

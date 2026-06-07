@@ -6,6 +6,7 @@ import authRouter from './routes/auth';
 import articlesRouter from './routes/articles';
 import programsRouter from './routes/programs';
 import schedulerRouter from './routes/scheduler';
+import whatsappRouter from './routes/whatsapp';
 
 const app = express();
 
@@ -22,6 +23,7 @@ app.use('/api/auth', authRouter);
 app.use('/api/articles', articlesRouter);
 app.use('/api/programs', programsRouter);
 app.use('/api/scheduler', schedulerRouter);
+app.use('/api/whatsapp', whatsappRouter);
 
 app.use((_req, res) => {
   res.status(404).json({ message: 'Route not found' });

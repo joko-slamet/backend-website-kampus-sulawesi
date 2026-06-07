@@ -36,6 +36,13 @@ model Article {
   updatedAt     DateTime @updatedAt
 }
 
+model SchedulerConfig {
+  id        String   @id @default("default")
+  enabled   Boolean  @default(true)
+  times     String[]
+  updatedAt DateTime @updatedAt
+}
+
 model Program {
   id            String   @id
   icon          String

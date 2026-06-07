@@ -19,6 +19,7 @@ model User {
 
 model Article {
   id            String   @id
+  image         String?
   category      String
   categoryColor String
   date          String

@@ -1,7 +1,15 @@
 import { z } from 'zod';
 
+export const generateArticleSchema = z.object({
+  topic: z.string().min(3).optional(),
+  category: z.string().optional(),
+});
+
+export type GenerateArticleInput = z.infer<typeof generateArticleSchema>;
+
 export const createArticleSchema = z.object({
   id: z.string().min(1),
+  image: z.string().nullable().optional(),
   category: z.string().min(1),
   categoryColor: z.string().min(1),
   date: z.string().min(1),

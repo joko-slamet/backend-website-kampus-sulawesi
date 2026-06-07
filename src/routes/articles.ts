@@ -2,7 +2,11 @@ import { Router, Request, Response } from 'express';
 import prisma from '../lib/prisma';
 import { requireAuth } from '../middleware/auth';
 import { validate } from '../middleware/validate';
-import { createArticleSchema, updateArticleSchema } from '../schemas/article';
+import { createArticleSchema, updateArticleSchema, generateArticleSchema } from '../schemas/article';
+import { generateArticle } from '../lib/openrouter';
+import { uploadArticleImage } from '../lib/upload';
+import path from 'path';
+import fs from 'fs';
 
 const router = Router();
 
@@ -31,6 +35,62 @@ router.get('/', async (req: Request, res: Response): Promise<void> => {
   ]);
 
   res.json({ data: articles, total, page: parseInt(page), limit: parseInt(limit) });
+});
+
+// Admin: upload article image
+router.post('/upload-image', requireAuth, (req: Request, res: Response): void => {
+  uploadArticleImage(req, res, (err) => {
+    if (err) {
+      res.status(400).json({ message: err.message });
+      return;
+    }
+    if (!req.file) {
+      res.status(400).json({ message: 'File gambar wajib diunggah' });
+      return;
+    }
+
+    const baseUrl = process.env.APP_URL ?? `http://localhost:${process.env.PORT ?? 4000}`;
+    const imageUrl = `${baseUrl}/uploads/${req.file.filename}`;
+    res.status(201).json({ url: imageUrl, filename: req.file.filename });
+  });
+});
+
+// Admin: delete article image
+router.delete('/upload-image/:filename', requireAuth, (req: Request, res: Response): void => {
+  const filename = path.basename(req.params.filename);
+  const filePath = path.join(process.cwd(), 'uploads', filename);
+
+  if (!fs.existsSync(filePath)) {
+    res.status(404).json({ message: 'File tidak ditemukan' });
+    return;
+  }
+
+  fs.unlinkSync(filePath);
+  res.json({ message: 'Gambar berhasil dihapus' });
+});
+
+// Admin: auto-generate article content using AI
+router.post('/generate', requireAuth, validate(generateArticleSchema), async (req: Request, res: Response): Promise<void> => {
+  const { topic, category } = req.body as { topic?: string; category?: string };
+
+  const generated = await generateArticle({ topic, category });
+
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+  const base = (topic ?? generated.title)
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, '')
+    .trim()
+    .replace(/\s+/g, '-')
+    .slice(0, 60);
+
+  res.json({
+    ...generated,
+    suggestedId: `${base}-${Date.now()}`,
+    date: dateStr,
+    views: 0,
+    published: false,
+  });
 });
 
 // Public: get single article

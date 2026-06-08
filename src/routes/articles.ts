@@ -51,9 +51,7 @@ router.post('/upload-image', requireAuth, (req: Request, res: Response): void =>
       return;
     }
 
-    const baseUrl = process.env.APP_URL ?? `http://localhost:${process.env.PORT ?? 4000}`;
-    const imageUrl = `${baseUrl}/uploads/${req.file.filename}`;
-    res.status(201).json({ url: imageUrl, filename: req.file.filename });
+    res.status(201).json({ url: `/uploads/${req.file.filename}`, filename: req.file.filename });
   });
 });
 

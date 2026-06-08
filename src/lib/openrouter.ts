@@ -2,7 +2,6 @@ import fs from 'fs';
 import path from 'path';
 import { OpenRouter } from '@openrouter/sdk';
 
-const OPENROUTER_BASE_URL = 'https://openrouter.ai/api/v1';
 const UPLOADS_DIR = path.join(process.cwd(), 'uploads');
 
 export interface GenerateArticleOptions {
@@ -44,19 +43,19 @@ function saveImageToDisk(buffer: Buffer, ext: string): string {
   if (!fs.existsSync(UPLOADS_DIR)) fs.mkdirSync(UPLOADS_DIR, { recursive: true });
   const filename = `ai-${Date.now()}-${Math.round(Math.random() * 1e6)}.${ext}`;
   fs.writeFileSync(path.join(UPLOADS_DIR, filename), buffer);
-  const baseUrl = process.env.APP_URL ?? `http://localhost:${process.env.PORT ?? 4000}`;
-  return `${baseUrl}/uploads/${filename}`;
+  return `/uploads/${filename}`;
 }
 
 async function generateImage(imagePrompt: string): Promise<string | null> {
   const apiKey = process.env.OPENROUTER_API_KEY;
   if (!apiKey) return null;
 
-  const imageModel = process.env.OPENROUTER_IMAGE_MODEL ?? 'black-forest-labs/flux-1-schnell:free';
-  const prompt = `${imagePrompt}. Clean composition, bright natural lighting, no text or watermark.`;
+  const imageModel = process.env.OPENROUTER_IMAGE_MODEL ?? 'google/gemini-2.5-flash-image';
+  const prompt = `Generate a professional editorial photo for a university news article. ${imagePrompt}. Clean composition, bright natural lighting, no text or watermark.`;
 
   try {
-    const response = await fetch(`${OPENROUTER_BASE_URL}/images/generations`, {
+    // Responses API supports multimodal output including image generation
+    const response = await fetch('https://openrouter.ai/api/v1/responses', {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${apiKey}`,
@@ -64,27 +63,62 @@ async function generateImage(imagePrompt: string): Promise<string | null> {
         'HTTP-Referer': process.env.APP_URL ?? 'http://localhost:4000',
         'X-Title': 'STIA Abdul Haris CMS',
       },
-      body: JSON.stringify({ model: imageModel, prompt, n: 1, size: '1024x576' }),
+      body: JSON.stringify({
+        model: imageModel,
+        input: prompt,
+        modalities: ['image'],
+      }),
     });
 
-    if (!response.ok) return null;
+    const text = await response.text();
 
-    const json = await response.json() as { data?: Array<{ url?: string; b64_json?: string }> };
-    const item = json.data?.[0];
-    if (!item) return null;
-
-    if (item.b64_json) {
-      return saveImageToDisk(Buffer.from(item.b64_json, 'base64'), 'jpg');
+    let json: unknown;
+    try {
+      json = JSON.parse(text);
+    } catch {
+      console.error('[generateImage] Non-JSON response (status', response.status, '):', text.slice(0, 300));
+      return null;
     }
 
-    if (item.url) {
-      const imgRes = await fetch(item.url);
-      if (!imgRes.ok) return item.url;
-      const ext = item.url.split('.').pop()?.split('?')[0]?.slice(0, 4) ?? 'jpg';
+    if (!response.ok) {
+      console.error('[generateImage] API error', response.status, ':', JSON.stringify(json).slice(0, 300));
+      return null;
+    }
+
+    // Response has output[] array; image items have imageB64, imageUrl, or result
+    type ImageItem = { type?: string; imageB64?: string; imageUrl?: string; result?: string };
+    const result = json as { output?: ImageItem[] };
+
+    const imgItem = result.output?.find(
+      o => o.type === 'image_generation_call' || o.type === 'openrouter:image_generation' || o.imageB64 || o.imageUrl
+    );
+
+    if (!imgItem) {
+      console.error('[generateImage] No image in output:', JSON.stringify(json).slice(0, 500));
+      return null;
+    }
+
+    if (imgItem.imageB64) {
+      return saveImageToDisk(Buffer.from(imgItem.imageB64, 'base64'), 'jpg');
+    }
+
+    const rawUrl = imgItem.imageUrl ?? imgItem.result;
+
+    if (rawUrl?.startsWith('data:image')) {
+      const b64 = rawUrl.split(',')[1];
+      if (b64) return saveImageToDisk(Buffer.from(b64, 'base64'), 'jpg');
+    }
+
+    if (rawUrl?.startsWith('http')) {
+      const imgRes = await fetch(rawUrl);
+      if (!imgRes.ok) return null;
+      const ext = rawUrl.split('.').pop()?.split('?')[0]?.slice(0, 4) ?? 'jpg';
       return saveImageToDisk(Buffer.from(await imgRes.arrayBuffer()), ext);
     }
-  } catch {
-    // Image generation bersifat opsional — jangan gagalkan seluruh proses
+
+    console.error('[generateImage] Image item has no usable data:', JSON.stringify(imgItem));
+  } catch (err) {
+    console.error('[generateImage] Exception:', err);
   }
 
   return null;

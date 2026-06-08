@@ -8,7 +8,8 @@
       "Bash(sed -i 's/STIMIK Abdul Haris/STIA Abdul Haris/g' app/artikel/content.ts)",
       "Bash(sed -i 's/STIMIK/STIA/g' app/dashboard/layout.tsx app/artikel/data.ts app/artikel/content.ts app/components/NewsSection.tsx)",
       "Bash(curl -s http://localhost:4000/health -w \"\\\\n\")",
-      "Bash(npx playwright *)"
+      "Bash(npx playwright *)",
+      "Bash(node -e \"const sdk = require\\('/home/joko/projects/backend-website-kampus-sulawesi/node_modules/@openrouter/sdk'\\); console.log\\(Object.keys\\(sdk\\).slice\\(0,20\\)\\)\")"
     ]
   }
 }

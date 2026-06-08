@@ -38,6 +38,8 @@ async function runGenerate(): Promise<void> {
         excerpt: generated.excerpt,
         titleEn: generated.titleEn,
         excerptEn: generated.excerptEn,
+        content: generated.content || null,
+        contentEn: generated.contentEn || null,
         category: generated.category,
         categoryColor: generated.categoryColor,
         tag: generated.tag || null,

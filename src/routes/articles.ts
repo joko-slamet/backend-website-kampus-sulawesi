@@ -10,11 +10,12 @@ import fs from 'fs';
 
 const router = Router();
 
-// Public: list all published articles
+// Public: list articles (published only), or all articles for authenticated dashboard requests (?all=true)
 router.get('/', async (req: Request, res: Response): Promise<void> => {
-  const { category, search, page = '1', limit = '20' } = req.query as Record<string, string>;
+  const { category, search, page = '1', limit = '20', all } = req.query as Record<string, string>;
 
-  const where: Record<string, unknown> = { published: true };
+  const isAdmin = all === 'true' && req.headers.authorization?.startsWith('Bearer ');
+  const where: Record<string, unknown> = isAdmin ? {} : { published: true };
 
   if (category && category !== 'Semua') {
     where.category = category;
@@ -83,14 +84,29 @@ router.post('/generate', requireAuth, validate(generateArticleSchema), async (re
     .trim()
     .replace(/\s+/g, '-')
     .slice(0, 60);
+  const id = `${base}-${Date.now()}`;
 
-  res.json({
-    ...generated,
-    suggestedId: `${base}-${Date.now()}`,
-    date: dateStr,
-    views: 0,
-    published: false,
+  const article = await prisma.article.create({
+    data: {
+      id,
+      image: generated.image ?? null,
+      title: generated.title,
+      excerpt: generated.excerpt,
+      titleEn: generated.titleEn,
+      excerptEn: generated.excerptEn,
+      content: generated.content || null,
+      contentEn: generated.contentEn || null,
+      category: generated.category,
+      categoryColor: generated.categoryColor,
+      tag: generated.tag || null,
+      tagColor: generated.tagColor || null,
+      readTime: generated.readTime,
+      date: dateStr,
+      published: false,
+    },
   });
+
+  res.status(201).json(article);
 });
 
 // Public: get single article

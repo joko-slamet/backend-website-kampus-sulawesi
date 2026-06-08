@@ -30,6 +30,8 @@ model Article {
   tagColor      String?
   titleEn       String
   excerptEn     String
+  content       String?
+  contentEn     String?
   views         Int      @default(0)
   published     Boolean  @default(true)
   createdAt     DateTime @default(now())

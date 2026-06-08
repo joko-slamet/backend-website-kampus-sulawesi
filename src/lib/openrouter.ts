@@ -1,8 +1,8 @@
 import fs from 'fs';
 import path from 'path';
+import { OpenRouter } from '@openrouter/sdk';
 
 const OPENROUTER_BASE_URL = 'https://openrouter.ai/api/v1';
-
 const UPLOADS_DIR = path.join(process.cwd(), 'uploads');
 
 export interface GenerateArticleOptions {
@@ -15,6 +15,8 @@ export interface GeneratedArticleData {
   excerpt: string;
   titleEn: string;
   excerptEn: string;
+  content: string;
+  contentEn: string;
   category: string;
   categoryColor: string;
   tag: string;
@@ -34,18 +36,6 @@ const CATEGORY_COLORS: Record<string, string> = {
   Pengabdian: '#14b8a6',
 };
 
-// Hint untuk image generation berdasarkan kategori
-const CATEGORY_IMAGE_HINTS: Record<string, string> = {
-  Teknologi: 'e-government digital transformation, public administration technology, modern government office Indonesia',
-  Akademik: 'university lecture hall, students studying administration, academic setting Makassar Indonesia',
-  Mahasiswa: 'diverse college students on campus, young people learning, campus life Makassar Sulawesi',
-  Berita: 'university campus building Makassar, Indonesian higher education institution, campus exterior Sulawesi Selatan',
-  Prestasi: 'graduation ceremony, academic achievement award, proud students with certificates, Indonesia university',
-  Kegiatan: 'student campus event, group activity, community gathering at university Makassar',
-  Riset: 'public policy research, administrative governance study, government analysis, Indonesia university',
-  Pengabdian: 'community service volunteers, students helping local community, public service Indonesia, Sulawesi outreach',
-};
-
 function resolveCategoryColor(category: string): string {
   return CATEGORY_COLORS[category] ?? '#3b82f6';
 }
@@ -58,13 +48,12 @@ function saveImageToDisk(buffer: Buffer, ext: string): string {
   return `${baseUrl}/uploads/${filename}`;
 }
 
-async function generateImage(titleEn: string, category: string): Promise<string | null> {
+async function generateImage(imagePrompt: string): Promise<string | null> {
   const apiKey = process.env.OPENROUTER_API_KEY;
   if (!apiKey) return null;
 
   const imageModel = process.env.OPENROUTER_IMAGE_MODEL ?? 'black-forest-labs/flux-1-schnell:free';
-  const hint = CATEGORY_IMAGE_HINTS[category] ?? 'university campus Indonesia, education, technology';
-  const prompt = `Professional editorial photo for a university article: "${titleEn}". ${hint}. Clean composition, bright natural lighting, no text or watermark.`;
+  const prompt = `${imagePrompt}. Clean composition, bright natural lighting, no text or watermark.`;
 
   try {
     const response = await fetch(`${OPENROUTER_BASE_URL}/images/generations`, {
@@ -75,12 +64,7 @@ async function generateImage(titleEn: string, category: string): Promise<string 
         'HTTP-Referer': process.env.APP_URL ?? 'http://localhost:4000',
         'X-Title': 'STIA Abdul Haris CMS',
       },
-      body: JSON.stringify({
-        model: imageModel,
-        prompt,
-        n: 1,
-        size: '1024x576',
-      }),
+      body: JSON.stringify({ model: imageModel, prompt, n: 1, size: '1024x576' }),
     });
 
     if (!response.ok) return null;
@@ -95,7 +79,7 @@ async function generateImage(titleEn: string, category: string): Promise<string 
 
     if (item.url) {
       const imgRes = await fetch(item.url);
-      if (!imgRes.ok) return item.url; // fallback: kembalikan URL eksternal
+      if (!imgRes.ok) return item.url;
       const ext = item.url.split('.').pop()?.split('?')[0]?.slice(0, 4) ?? 'jpg';
       return saveImageToDisk(Buffer.from(await imgRes.arrayBuffer()), ext);
     }
@@ -110,6 +94,7 @@ export async function generateArticle(options: GenerateArticleOptions): Promise<
   const apiKey = process.env.OPENROUTER_API_KEY;
   if (!apiKey) throw new Error('OPENROUTER_API_KEY tidak dikonfigurasi');
 
+  const client = new OpenRouter({ apiKey });
   const model = process.env.OPENROUTER_MODEL ?? 'google/gemma-2-9b-it:free';
 
   const systemPrompt = `Kamu adalah editor konten resmi untuk website STIA YPA-AH "Abdul Haris" Makassar.
@@ -128,69 +113,98 @@ Balas HANYA dengan JSON valid, tanpa markdown atau kode blok.`;
 
   const topicInstruction = options.topic
     ? `Tulis artikel dengan topik: "${options.topic}".`
-    : `Pilih sendiri topik artikel yang relevan, segar, dan menarik. Variasikan topik — misalnya kebijakan publik, tata kelola daerah, karier administrasi, kehidupan mahasiswa, atau kegiatan kampus.`;
+    : `Pilih sendiri topik artikel yang paling relevan dan segar. Variasikan — jangan ulangi topik yang sama berturut-turut.`;
 
-  const categoryHint = options.category ? `Gunakan kategori: ${options.category}.` : '';
+  // Request 1: metadata only (JSON kecil, tidak berisiko truncate)
+  const metaPrompt = `${topicInstruction}
 
-  const userPrompt = `${topicInstruction} ${categoryHint}
+Balas HANYA JSON valid satu baris, tanpa komentar:
+{"title":"...","excerpt":"...","titleEn":"...","excerptEn":"...","category":"...","tag":"...","readTime":"...","imagePrompt":"..."}
 
-Hasilkan JSON:
-{
-  "title": "Judul artikel Bahasa Indonesia, menarik, max 100 karakter",
-  "excerpt": "Ringkasan 2-3 kalimat informatif dalam Bahasa Indonesia",
-  "titleEn": "Article title in English, compelling, max 100 chars",
-  "excerptEn": "2-3 sentence informative excerpt in English",
-  "category": "Satu dari: Teknologi, Akademik, Mahasiswa, Berita, Prestasi, Kegiatan, Riset, Pengabdian",
-  "tag": "Tag singkat 1-2 kata",
-  "readTime": "Estimasi baca, contoh: 5 menit"
-}`;
+Keterangan field:
+- title: judul Bahasa Indonesia, max 100 karakter
+- excerpt: ringkasan 2-3 kalimat Bahasa Indonesia
+- titleEn: judul Bahasa Inggris, max 100 karakter
+- excerptEn: ringkasan 2-3 kalimat Bahasa Inggris
+- category: kategori singkat bebas
+- tag: tag 1-2 kata
+- readTime: estimasi baca, contoh "5 menit"
+- imagePrompt: deskripsi foto editorial profesional dalam Bahasa Inggris, max 30 kata`;
 
-  const response = await fetch(`${OPENROUTER_BASE_URL}/chat/completions`, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-      'HTTP-Referer': process.env.APP_URL ?? 'http://localhost:4000',
-      'X-Title': 'STIA Abdul Haris CMS',
-    },
-    body: JSON.stringify({
+  const metaResult = await client.chat.send({
+    httpReferer: process.env.APP_URL ?? 'http://localhost:4000',
+    appTitle: 'STIA Abdul Haris CMS',
+    chatRequest: {
       model,
       messages: [
         { role: 'system', content: systemPrompt },
-        { role: 'user', content: userPrompt },
+        { role: 'user', content: metaPrompt },
       ],
       temperature: 0.8,
-      max_tokens: 800,
-    }),
+      maxTokens: 600,
+    },
   });
 
-  if (!response.ok) {
-    const err = await response.text();
-    throw new Error(`OpenRouter API error ${response.status}: ${err}`);
-  }
-
-  const json = await response.json() as { choices: Array<{ message: { content: string } }> };
-  const content = json.choices?.[0]?.message?.content;
-  if (!content) throw new Error('Respons AI kosong atau tidak valid');
+  const metaRaw = (metaResult as { choices: Array<{ message: { content: string } }> }).choices?.[0]?.message?.content;
+  if (!metaRaw) throw new Error('Respons AI kosong atau tidak valid');
 
   let parsed: Record<string, string>;
   try {
-    const cleaned = content.replace(/^```json\s*/i, '').replace(/```\s*$/i, '').trim();
+    const cleaned = metaRaw.replace(/^```json\s*/i, '').replace(/```\s*$/i, '').trim();
     parsed = JSON.parse(cleaned);
   } catch {
-    throw new Error('Gagal mem-parsing respons AI sebagai JSON');
+    throw new Error('Gagal mem-parsing metadata AI sebagai JSON');
   }
 
-  const category = parsed.category ?? options.category ?? 'Berita';
+  const category = parsed.category ?? 'Berita';
+  const imagePrompt = parsed.imagePrompt ?? `Professional editorial photo for a university article about: ${parsed.titleEn ?? parsed.title ?? ''}`;
+  const title = parsed.title ?? '';
+  const titleEn = parsed.titleEn ?? '';
 
-  // Generate artikel teks dan gambar secara paralel
-  const image = await generateImage(parsed.titleEn ?? parsed.title ?? '', category);
+  // Request 2 + 3: konten artikel dan gambar secara paralel
+  const contentSystemPrompt = `Kamu adalah penulis konten profesional untuk website kampus STIA YPA-AH "Abdul Haris" Makassar. Tulis konten artikel yang informatif, menarik, dan mengalir secara natural. Gunakan format markdown: ## untuk subjudul, paragraf biasa, dan - untuk poin-poin.`;
+
+  const [contentResult, contentEnResult, image] = await Promise.all([
+    client.chat.send({
+      httpReferer: process.env.APP_URL ?? 'http://localhost:4000',
+      appTitle: 'STIA Abdul Haris CMS',
+      chatRequest: {
+        model,
+        messages: [
+          { role: 'system', content: contentSystemPrompt },
+          { role: 'user', content: `Tulis konten artikel lengkap dalam Bahasa Indonesia untuk artikel berjudul: "${title}"\n\nTulis minimal 350 kata. Hanya tulis konten artikel, tanpa judul, tanpa penjelasan tambahan.` },
+        ],
+        temperature: 0.8,
+        maxTokens: 1500,
+      },
+    }),
+    client.chat.send({
+      httpReferer: process.env.APP_URL ?? 'http://localhost:4000',
+      appTitle: 'STIA Abdul Haris CMS',
+      chatRequest: {
+        model,
+        messages: [
+          { role: 'system', content: contentSystemPrompt },
+          { role: 'user', content: `Write a full article in English for the article titled: "${titleEn}"\n\nWrite at least 350 words. Only write the article content, without the title or additional explanation.` },
+        ],
+        temperature: 0.8,
+        maxTokens: 1500,
+      },
+    }),
+    generateImage(imagePrompt),
+  ]);
+
+  type ChatRes = { choices: Array<{ message: { content: string } }> };
+  const content = (contentResult as ChatRes).choices?.[0]?.message?.content ?? '';
+  const contentEn = (contentEnResult as ChatRes).choices?.[0]?.message?.content ?? '';
 
   return {
-    title: parsed.title ?? '',
+    title,
     excerpt: parsed.excerpt ?? '',
-    titleEn: parsed.titleEn ?? '',
+    titleEn,
     excerptEn: parsed.excerptEn ?? '',
+    content,
+    contentEn,
     category,
     categoryColor: resolveCategoryColor(category),
     tag: parsed.tag ?? '',

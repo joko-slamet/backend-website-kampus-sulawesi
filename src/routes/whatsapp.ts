@@ -39,4 +39,28 @@ router.get('/stats', requireAuth, async (req: Request, res: Response): Promise<v
   });
 });
 
+router.get('/daily', requireAuth, async (req: Request, res: Response): Promise<void> => {
+  const { from, to } = req.query as { from?: string; to?: string };
+
+  const defaultTo = new Date();
+  const defaultFrom = new Date();
+  defaultFrom.setDate(defaultFrom.getDate() - 29);
+
+  const start = from ? new Date(from) : defaultFrom;
+  const end = to ? new Date(to) : defaultTo;
+
+  type DayRow = { day: string; count: bigint };
+  const rows = await prisma.$queryRaw<DayRow[]>`
+    SELECT
+      TO_CHAR(("createdAt" AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Makassar'), 'YYYY-MM-DD') AS day,
+      COUNT(*)::bigint AS count
+    FROM "WhatsappClickLog"
+    WHERE "createdAt" >= ${start} AND "createdAt" <= ${end}
+    GROUP BY day
+    ORDER BY day ASC
+  `;
+
+  res.json(rows.map(r => ({ day: r.day, count: Number(r.count) })));
+});
+
 export default router;

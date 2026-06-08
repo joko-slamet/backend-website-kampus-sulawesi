@@ -51,6 +51,21 @@ model WhatsappClickLog {
   createdAt DateTime @default(now())
 }
 
+model News {
+  id        String   @id
+  type      String
+  title     String
+  image     String?
+  content   String?
+  category  String
+  tag       String?
+  pinned    Boolean  @default(false)
+  published Boolean  @default(false)
+  views     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
 model Program {
   id            String   @id
   icon          String

@@ -10,7 +10,13 @@
       "Bash(curl -s http://localhost:4000/health -w \"\\\\n\")",
       "Bash(npx playwright *)",
       "Bash(node -e \"const sdk = require\\('/home/joko/projects/backend-website-kampus-sulawesi/node_modules/@openrouter/sdk'\\); console.log\\(Object.keys\\(sdk\\).slice\\(0,20\\)\\)\")",
-      "Bash(node -e ' *)"
+      "Bash(node -e ' *)",
+      "Bash(sed -n '78,95p' /home/joko/projects/website-kampus-sulawesi/app/i18n/translations.ts)",
+      "Bash(sed -n '352,370p' /home/joko/projects/website-kampus-sulawesi/app/i18n/translations.ts)",
+      "Bash(mkdir -p /home/joko/projects/website-kampus-sulawesi/app/berita/\\\\[id\\\\])"
+    ],
+    "additionalDirectories": [
+      "/home/joko/projects/website-kampus-sulawesi/app/berita"
     ]
   }
 }

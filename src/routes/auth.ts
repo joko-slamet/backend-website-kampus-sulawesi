@@ -1,14 +1,15 @@
-import { Router, Request, Response } from 'express';
+import { Router, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import prisma from '../lib/prisma';
 import { validate } from '../middleware/validate';
 import { requireAuth, AuthRequest } from '../middleware/auth';
+import { asyncHandler } from '../middleware/asyncHandler';
 import { loginSchema } from '../schemas/auth';
 
 const router = Router();
 
-router.post('/login', validate(loginSchema), async (req: Request, res: Response): Promise<void> => {
+router.post('/login', validate(loginSchema), asyncHandler(async (req, res: Response) => {
   const { email, password } = req.body;
 
   const user = await prisma.user.findUnique({ where: { email } });
@@ -33,9 +34,9 @@ router.post('/login', validate(loginSchema), async (req: Request, res: Response)
     token,
     user: { id: user.id, name: user.name, email: user.email, role: user.role },
   });
-});
+}));
 
-router.get('/me', requireAuth, async (req: AuthRequest, res: Response): Promise<void> => {
+router.get('/me', requireAuth, asyncHandler(async (req: AuthRequest, res: Response) => {
   const user = await prisma.user.findUnique({
     where: { id: req.user!.id },
     select: { id: true, name: true, email: true, role: true },
@@ -45,6 +46,6 @@ router.get('/me', requireAuth, async (req: AuthRequest, res: Response): Promise<
     return;
   }
   res.json(user);
-});
+}));
 
 export default router;

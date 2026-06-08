@@ -3,6 +3,7 @@ import { z } from 'zod';
 import prisma from '../lib/prisma';
 import { requireAuth } from '../middleware/auth';
 import { validate } from '../middleware/validate';
+import { asyncHandler } from '../middleware/asyncHandler';
 import { reloadScheduler, runNow } from '../lib/scheduler';
 
 const router = Router();
@@ -15,8 +16,7 @@ const updateSchema = z.object({
     .max(10, 'Maksimal 10 jadwal'),
 });
 
-// GET /api/scheduler — ambil konfigurasi
-router.get('/', requireAuth, async (_req: Request, res: Response): Promise<void> => {
+router.get('/', requireAuth, asyncHandler(async (_req: Request, res: Response) => {
   let config = await prisma.schedulerConfig.findUnique({ where: { id: 'default' } });
   if (!config) {
     config = await prisma.schedulerConfig.create({
@@ -24,10 +24,9 @@ router.get('/', requireAuth, async (_req: Request, res: Response): Promise<void>
     });
   }
   res.json({ enabled: config.enabled, times: config.times });
-});
+}));
 
-// PUT /api/scheduler — update konfigurasi
-router.put('/', requireAuth, validate(updateSchema), async (req: Request, res: Response): Promise<void> => {
+router.put('/', requireAuth, validate(updateSchema), asyncHandler(async (req: Request, res: Response) => {
   const { enabled, times } = req.body as { enabled: boolean; times: string[] };
 
   const config = await prisma.schedulerConfig.upsert({
@@ -39,12 +38,11 @@ router.put('/', requireAuth, validate(updateSchema), async (req: Request, res: R
   reloadScheduler(config.enabled, config.times);
 
   res.json({ enabled: config.enabled, times: config.times });
-});
+}));
 
-// POST /api/scheduler/run — jalankan generate sekarang
-router.post('/run', requireAuth, async (_req: Request, res: Response): Promise<void> => {
+// Response dikirim duluan, generate jalan di background
+router.post('/run', requireAuth, (_req: Request, res: Response) => {
   res.json({ message: 'Generate dimulai' });
-  // Jalankan di background agar response tidak menunggu
   runNow().catch(err => console.error('[scheduler/run]', err));
 });
 

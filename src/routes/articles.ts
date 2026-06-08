@@ -1,4 +1,5 @@
 import { Router, Request, Response } from 'express';
+import { asyncHandler } from '../middleware/asyncHandler';
 import prisma from '../lib/prisma';
 import { requireAuth } from '../middleware/auth';
 import { validate } from '../middleware/validate';
@@ -11,7 +12,7 @@ import fs from 'fs';
 const router = Router();
 
 // Public: list articles (published only), or all articles for authenticated dashboard requests (?all=true)
-router.get('/', async (req: Request, res: Response): Promise<void> => {
+router.get('/', asyncHandler(async (req: Request, res: Response) => {
   const { category, search, page = '1', limit = '20', all } = req.query as Record<string, string>;
 
   const isAdmin = all === 'true' && req.headers.authorization?.startsWith('Bearer ');
@@ -36,7 +37,7 @@ router.get('/', async (req: Request, res: Response): Promise<void> => {
   ]);
 
   res.json({ data: articles, total, page: parseInt(page), limit: parseInt(limit) });
-});
+}));
 
 // Admin: upload article image
 router.post('/upload-image', requireAuth, (req: Request, res: Response): void => {
@@ -71,7 +72,7 @@ router.delete('/upload-image/:filename', requireAuth, (req: Request, res: Respon
 });
 
 // Admin: auto-generate article content using AI
-router.post('/generate', requireAuth, validate(generateArticleSchema), async (req: Request, res: Response): Promise<void> => {
+router.post('/generate', requireAuth, validate(generateArticleSchema), asyncHandler(async (req: Request, res: Response) => {
   const { topic, category } = req.body as { topic?: string; category?: string };
 
   const generated = await generateArticle({ topic, category });
@@ -94,8 +95,8 @@ router.post('/generate', requireAuth, validate(generateArticleSchema), async (re
       excerpt: generated.excerpt,
       titleEn: generated.titleEn,
       excerptEn: generated.excerptEn,
-      content: generated.content || null,
-      contentEn: generated.contentEn || null,
+      content: generated.content || undefined,
+      contentEn: generated.contentEn || undefined,
       category: generated.category,
       categoryColor: generated.categoryColor,
       tag: generated.tag || null,
@@ -107,10 +108,10 @@ router.post('/generate', requireAuth, validate(generateArticleSchema), async (re
   });
 
   res.status(201).json(article);
-});
+}));
 
 // Public: get single article
-router.get('/:id', async (req: Request, res: Response): Promise<void> => {
+router.get('/:id', asyncHandler(async (req: Request, res: Response) => {
   const article = await prisma.article.findUnique({ where: { id: req.params.id } });
   if (!article) {
     res.status(404).json({ message: 'Artikel tidak ditemukan' });
@@ -119,10 +120,10 @@ router.get('/:id', async (req: Request, res: Response): Promise<void> => {
   // increment views
   await prisma.article.update({ where: { id: req.params.id }, data: { views: { increment: 1 } } });
   res.json({ ...article, views: article.views + 1 });
-});
+}));
 
 // Admin: create article
-router.post('/', requireAuth, validate(createArticleSchema), async (req: Request, res: Response): Promise<void> => {
+router.post('/', requireAuth, validate(createArticleSchema), asyncHandler(async (req: Request, res: Response) => {
   const existing = await prisma.article.findUnique({ where: { id: req.body.id } });
   if (existing) {
     res.status(409).json({ message: 'ID artikel sudah digunakan' });
@@ -131,10 +132,10 @@ router.post('/', requireAuth, validate(createArticleSchema), async (req: Request
 
   const article = await prisma.article.create({ data: req.body });
   res.status(201).json(article);
-});
+}));
 
 // Admin: update article
-router.put('/:id', requireAuth, validate(updateArticleSchema), async (req: Request, res: Response): Promise<void> => {
+router.put('/:id', requireAuth, validate(updateArticleSchema), asyncHandler(async (req: Request, res: Response) => {
   const existing = await prisma.article.findUnique({ where: { id: req.params.id } });
   if (!existing) {
     res.status(404).json({ message: 'Artikel tidak ditemukan' });
@@ -143,10 +144,10 @@ router.put('/:id', requireAuth, validate(updateArticleSchema), async (req: Reque
 
   const article = await prisma.article.update({ where: { id: req.params.id }, data: req.body });
   res.json(article);
-});
+}));
 
 // Admin: delete article
-router.delete('/:id', requireAuth, async (req: Request, res: Response): Promise<void> => {
+router.delete('/:id', requireAuth, asyncHandler(async (req: Request, res: Response) => {
   const existing = await prisma.article.findUnique({ where: { id: req.params.id } });
   if (!existing) {
     res.status(404).json({ message: 'Artikel tidak ditemukan' });
@@ -155,6 +156,6 @@ router.delete('/:id', requireAuth, async (req: Request, res: Response): Promise<
 
   await prisma.article.delete({ where: { id: req.params.id } });
   res.json({ message: 'Artikel berhasil dihapus' });
-});
+}));
 
 export default router;

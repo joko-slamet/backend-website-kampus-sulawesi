@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import path from 'path';
 
@@ -27,6 +27,15 @@ app.use('/api/whatsapp', whatsappRouter);
 
 app.use((_req, res) => {
   res.status(404).json({ message: 'Route not found' });
+});
+
+// Global error handler — catches any error forwarded via next(err)
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
+  const message = err instanceof Error ? err.message : 'Terjadi kesalahan pada server';
+  const status = (err as { status?: number }).status ?? 500;
+  console.error('[server error]', err);
+  res.status(status).json({ message });
 });
 
 export default app;

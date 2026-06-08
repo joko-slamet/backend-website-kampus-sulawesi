@@ -1,16 +1,17 @@
 import { Router, Request, Response } from 'express';
 import prisma from '../lib/prisma';
 import { requireAuth } from '../middleware/auth';
+import { asyncHandler } from '../middleware/asyncHandler';
 
 const router = Router();
 
-router.post('/track', async (req: Request, res: Response): Promise<void> => {
+router.post('/track', asyncHandler(async (req: Request, res: Response) => {
   const { page } = req.body as { page?: string };
   await prisma.whatsappClickLog.create({ data: { page: page ?? '/' } });
   res.json({ ok: true });
-});
+}));
 
-router.get('/stats', requireAuth, async (req: Request, res: Response): Promise<void> => {
+router.get('/stats', requireAuth, asyncHandler(async (req: Request, res: Response) => {
   const { from, to } = req.query as { from?: string; to?: string };
 
   const sevenDaysAgo = new Date();
@@ -37,9 +38,9 @@ router.get('/stats', requireAuth, async (req: Request, res: Response): Promise<v
     last7Days,
     byPage: byPage.map((p) => ({ page: p.page, count: p._count.id })),
   });
-});
+}));
 
-router.get('/daily', requireAuth, async (req: Request, res: Response): Promise<void> => {
+router.get('/daily', requireAuth, asyncHandler(async (req: Request, res: Response) => {
   const { from, to } = req.query as { from?: string; to?: string };
 
   const defaultTo = new Date();
@@ -61,6 +62,6 @@ router.get('/daily', requireAuth, async (req: Request, res: Response): Promise<v
   `;
 
   res.json(rows.map(r => ({ day: r.day, count: Number(r.count) })));
-});
+}));
 
 export default router;

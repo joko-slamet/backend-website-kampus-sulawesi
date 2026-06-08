@@ -11,6 +11,23 @@ import fs from 'fs';
 
 const router = Router();
 
+// Admin: aggregate stats
+router.get('/stats', requireAuth, asyncHandler(async (_req: Request, res: Response) => {
+  const [total, published, totalViewsAgg, news, leads] = await Promise.all([
+    prisma.article.count(),
+    prisma.article.count({ where: { published: true } }),
+    prisma.article.aggregate({ _sum: { views: true } }),
+    prisma.news.count(),
+    prisma.lead.count(),
+  ]);
+  res.json({
+    articles: { total, published, draft: total - published },
+    totalViews: totalViewsAgg._sum.views ?? 0,
+    news,
+    leads,
+  });
+}));
+
 // Public: list articles (published only), or all articles for authenticated dashboard requests (?all=true)
 router.get('/', asyncHandler(async (req: Request, res: Response) => {
   const { category, search, page = '1', limit = '20', all } = req.query as Record<string, string>;

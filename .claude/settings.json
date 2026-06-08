@@ -14,7 +14,9 @@
       "Bash(sed -n '78,95p' /home/joko/projects/website-kampus-sulawesi/app/i18n/translations.ts)",
       "Bash(sed -n '352,370p' /home/joko/projects/website-kampus-sulawesi/app/i18n/translations.ts)",
       "Bash(mkdir -p /home/joko/projects/website-kampus-sulawesi/app/berita/\\\\[id\\\\])",
-      "Bash(git rm *)"
+      "Bash(git rm *)",
+      "Bash(identify /home/joko/projects/website-kampus-sulawesi/public/logo.png)",
+      "Bash(convert --version)"
     ],
     "additionalDirectories": [
       "/home/joko/projects/website-kampus-sulawesi/app/berita"

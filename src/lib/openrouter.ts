@@ -51,7 +51,7 @@ async function generateImage(imagePrompt: string): Promise<string | null> {
   if (!apiKey) return null;
 
   const imageModel = process.env.OPENROUTER_IMAGE_MODEL ?? 'google/gemini-2.5-flash-image';
-  const prompt = `Generate a professional editorial photo for a university news article. ${imagePrompt}. Clean composition, bright natural lighting, no text or watermark.`;
+  const prompt = `Generate a professional editorial photo in 16:9 landscape format for a university news article. ${imagePrompt}. Wide horizontal composition, bright natural lighting, no text or watermark.`;
 
   try {
     // Responses API supports multimodal output including image generation
@@ -67,6 +67,7 @@ async function generateImage(imagePrompt: string): Promise<string | null> {
         model: imageModel,
         input: prompt,
         modalities: ['image'],
+        image_generation_config: { aspect_ratio: '16:9' },
       }),
     });
 

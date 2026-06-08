@@ -8,6 +8,7 @@ import newsRouter from './routes/news';
 import programsRouter from './routes/programs';
 import schedulerRouter from './routes/scheduler';
 import whatsappRouter from './routes/whatsapp';
+import leadsRouter from './routes/leads';
 
 const app = express();
 
@@ -26,6 +27,7 @@ app.use('/api/news', newsRouter);
 app.use('/api/programs', programsRouter);
 app.use('/api/scheduler', schedulerRouter);
 app.use('/api/whatsapp', whatsappRouter);
+app.use('/api/leads', leadsRouter);
 
 app.use((_req, res) => {
   res.status(404).json({ message: 'Route not found' });

@@ -66,6 +66,17 @@ model News {
   updatedAt DateTime @updatedAt
 }
 
+model Lead {
+  id        String   @id @default(cuid())
+  name      String
+  phone     String
+  program   String?
+  school    String?
+  message   String?
+  source    String   @default("website")
+  createdAt DateTime @default(now())
+}
+
 model Program {
   id            String   @id
   icon          String

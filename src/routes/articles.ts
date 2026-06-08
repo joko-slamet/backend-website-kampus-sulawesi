@@ -30,7 +30,7 @@ router.get('/stats', requireAuth, asyncHandler(async (_req: Request, res: Respon
 
 // Public: list articles (published only), or all articles for authenticated dashboard requests (?all=true)
 router.get('/', asyncHandler(async (req: Request, res: Response) => {
-  const { category, search, page = '1', limit = '20', all } = req.query as Record<string, string>;
+  const { category, search, page = '1', limit = '20', all, sort } = req.query as Record<string, string>;
 
   const isAdmin = all === 'true' && req.headers.authorization?.startsWith('Bearer ');
   const where: Record<string, unknown> = isAdmin ? {} : { published: true };
@@ -46,7 +46,7 @@ router.get('/', asyncHandler(async (req: Request, res: Response) => {
   const [articles, total] = await Promise.all([
     prisma.article.findMany({
       where,
-      orderBy: { createdAt: 'desc' },
+      orderBy: sort === 'views' ? { views: 'desc' } : { createdAt: 'desc' },
       skip,
       take: parseInt(limit),
     }),
@@ -170,6 +170,12 @@ router.delete('/:id', requireAuth, asyncHandler(async (req: Request, res: Respon
   }
 
   await prisma.article.delete({ where: { id: req.params.id } });
+
+  if (existing.image && existing.image.startsWith('/uploads/')) {
+    const filePath = path.join(process.cwd(), existing.image);
+    if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+  }
+
   res.json({ message: 'Artikel berhasil dihapus' });
 }));
 

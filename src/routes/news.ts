@@ -13,7 +13,7 @@ const router = Router();
 
 // Public: list news (published only unless ?all=true with bearer token)
 router.get('/', asyncHandler(async (req: Request, res: Response) => {
-  const { type, category, search, page = '1', limit = '20', all } = req.query as Record<string, string>;
+  const { type, category, search, page = '1', limit = '20', all, sort } = req.query as Record<string, string>;
 
   const isAdmin = all === 'true' && req.headers.authorization?.startsWith('Bearer ');
   const where: Record<string, unknown> = isAdmin ? {} : { published: true };
@@ -27,7 +27,9 @@ router.get('/', asyncHandler(async (req: Request, res: Response) => {
   const [items, total] = await Promise.all([
     prisma.news.findMany({
       where,
-      orderBy: [{ pinned: 'desc' }, { createdAt: 'desc' }],
+      orderBy: sort === 'views'
+        ? [{ pinned: 'desc' }, { views: 'desc' }]
+        : [{ pinned: 'desc' }, { createdAt: 'desc' }],
       skip,
       take: parseInt(limit),
     }),
@@ -95,7 +97,14 @@ router.put('/:id', requireAuth, validate(updateNewsSchema), asyncHandler(async (
 router.delete('/:id', requireAuth, asyncHandler(async (req: Request, res: Response) => {
   const existing = await prisma.news.findUnique({ where: { id: req.params.id } });
   if (!existing) { res.status(404).json({ message: 'Berita tidak ditemukan' }); return; }
+
   await prisma.news.delete({ where: { id: req.params.id } });
+
+  if (existing.image && existing.image.startsWith('/uploads/')) {
+    const filePath = path.join(process.cwd(), existing.image);
+    if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+  }
+
   res.json({ message: 'Berita berhasil dihapus' });
 }));
 

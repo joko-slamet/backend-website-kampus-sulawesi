@@ -22,7 +22,9 @@
       "Bash(grep -E \"^news$|^article$\")",
       "Bash(xargs sed -i \"s|/artikel/|/article/|g; s|'/artikel'|'/article'|g; s|\\\\\"/artikel\\\\\"|'/article'|g; s|href=\\\\\"/artikel\\\\\"|href=\\\\\"/article\\\\\"|g; s|\\\\`/artikel/|\\\\`/article/|g; s|canonical: '/artikel'|canonical: '/article'|g; s|'/berita'|'/news'|g; s|\\\\\"/berita\\\\\"|'/news'|g; s|href=\\\\\"/berita\\\\\"|href=\\\\\"/news\\\\\"|g; s|/berita/|/news/|g\")",
       "Bash(sed -i 's|${BASE_URL}/artikel`|${BASE_URL}/article`|g' /home/joko/projects/website-kampus-sulawesi/app/article/[slug]/page.tsx)",
-      "Bash(sed -i 's|${BASE_URL}/berita`|${BASE_URL}/news`|g' \"/home/joko/projects/website-kampus-sulawesi/app/news/[id]/page.tsx\")"
+      "Bash(sed -i 's|${BASE_URL}/berita`|${BASE_URL}/news`|g' \"/home/joko/projects/website-kampus-sulawesi/app/news/[id]/page.tsx\")",
+      "Bash(python3)",
+      "Bash(git checkout *)"
     ],
     "additionalDirectories": [
       "/home/joko/projects/website-kampus-sulawesi/app/berita"

@@ -124,6 +124,82 @@ async function generateImage(imagePrompt: string): Promise<string | null> {
   return null;
 }
 
+export interface GenerateNewsContentOptions {
+  title: string;
+  type: 'news' | 'announcement';
+}
+
+export interface GeneratedNewsContent {
+  content: string;
+  category: string;
+  tag: string;
+}
+
+const NEWS_CATEGORIES = ['Akademik', 'Keuangan', 'Kemahasiswaan', 'Kepegawaian', 'Penelitian', 'Kegiatan', 'Umum'];
+
+export async function generateNewsContent(options: GenerateNewsContentOptions): Promise<GeneratedNewsContent> {
+  const apiKey = process.env.OPENROUTER_API_KEY;
+  if (!apiKey) throw new Error('OPENROUTER_API_KEY tidak dikonfigurasi');
+
+  const client = new OpenRouter({ apiKey });
+  const model = process.env.OPENROUTER_MODEL ?? 'google/gemma-2-9b-it:free';
+
+  const typeLabel = options.type === 'announcement' ? 'pengumuman' : 'berita';
+
+  const systemPrompt = `Kamu adalah editor konten resmi untuk website STIA YPA-AH "Abdul Haris" Makassar.
+
+Profil kampus:
+- Nama: STIA YPA-AH "Abdul Haris" Makassar
+- Lokasi: Makassar, Sulawesi Selatan, Indonesia
+- Program studi: S1 Administrasi Publik dan S1 Administrasi Bisnis
+- Akreditasi: BAIK (BAN-PT)
+
+Balas HANYA dengan JSON valid satu baris, tanpa markdown atau kode blok.`;
+
+  const userPrompt = `Judul ${typeLabel}: "${options.title}"
+
+Balas dengan JSON valid satu baris:
+{"category":"...","tag":"...","content":"..."}
+
+Ketentuan:
+- category: pilih SATU dari [${NEWS_CATEGORIES.map(c => `"${c}"`).join(', ')}] yang paling sesuai dengan judul
+- tag: 1-2 kata singkat relevan, atau string kosong jika tidak ada
+- content: konten ${typeLabel} lengkap dalam HTML (gunakan <h2>, <p>, <ul><li>, <strong> secukupnya). Minimal 200 kata, informatif, sesuai judul, dalam Bahasa Indonesia. Jangan ulangi judulnya di dalam konten.`;
+
+  const result = await client.chat.send({
+    httpReferer: process.env.APP_URL ?? 'http://localhost:4000',
+    appTitle: 'STIA Abdul Haris CMS',
+    chatRequest: {
+      model,
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userPrompt },
+      ],
+      temperature: 0.75,
+      maxTokens: 2000,
+    },
+  });
+
+  const raw = (result as { choices: Array<{ message: { content: string } }> }).choices?.[0]?.message?.content;
+  if (!raw) throw new Error('Respons AI kosong');
+
+  let parsed: { category: string; tag: string; content: string };
+  try {
+    const cleaned = raw.replace(/^```json\s*/i, '').replace(/```\s*$/i, '').trim();
+    parsed = JSON.parse(cleaned);
+  } catch {
+    throw new Error('Gagal mem-parsing respons AI sebagai JSON');
+  }
+
+  const category = NEWS_CATEGORIES.includes(parsed.category) ? parsed.category : 'Umum';
+
+  return {
+    content: parsed.content ?? '',
+    category,
+    tag: parsed.tag ?? '',
+  };
+}
+
 export async function generateArticle(options: GenerateArticleOptions): Promise<GeneratedArticleData> {
   const apiKey = process.env.OPENROUTER_API_KEY;
   if (!apiKey) throw new Error('OPENROUTER_API_KEY tidak dikonfigurasi');

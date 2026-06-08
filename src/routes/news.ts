@@ -5,6 +5,7 @@ import { requireAuth } from '../middleware/auth';
 import { validate } from '../middleware/validate';
 import { createNewsSchema, updateNewsSchema } from '../schemas/news';
 import { uploadNewsImage } from '../lib/upload';
+import { generateNewsContent } from '../lib/openrouter';
 import path from 'path';
 import fs from 'fs';
 
@@ -34,6 +35,18 @@ router.get('/', asyncHandler(async (req: Request, res: Response) => {
   ]);
 
   res.json({ data: items, total, page: parseInt(page), limit: parseInt(limit) });
+}));
+
+// Admin: generate news content from title using AI
+router.post('/generate', requireAuth, asyncHandler(async (req: Request, res: Response) => {
+  const { title, type } = req.body as { title?: string; type?: string };
+  if (!title || typeof title !== 'string' || !title.trim()) {
+    res.status(400).json({ message: 'Judul wajib diisi' });
+    return;
+  }
+  const newsType: 'news' | 'announcement' = type === 'announcement' ? 'announcement' : 'news';
+  const result = await generateNewsContent({ title: title.trim(), type: newsType });
+  res.json(result);
 }));
 
 // Admin: upload image

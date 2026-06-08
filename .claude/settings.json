@@ -16,7 +16,13 @@
       "Bash(mkdir -p /home/joko/projects/website-kampus-sulawesi/app/berita/\\\\[id\\\\])",
       "Bash(git rm *)",
       "Bash(identify /home/joko/projects/website-kampus-sulawesi/public/logo.png)",
-      "Bash(convert --version)"
+      "Bash(convert --version)",
+      "Bash(grep -rn '\"/artikel\\\\|href=\"/artikel\\\\|href=`/artikel\\\\|/artikel/' /home/joko/projects/website-kampus-sulawesi/app --include=\"*.tsx\" --include=\"*.ts\")",
+      "Bash(grep -rn '\"/berita\\\\|href=\"/berita\\\\|href=`/berita\\\\|/berita/' /home/joko/projects/website-kampus-sulawesi/app --include=\"*.tsx\" --include=\"*.ts\")",
+      "Bash(grep -E \"^news$|^article$\")",
+      "Bash(xargs sed -i \"s|/artikel/|/article/|g; s|'/artikel'|'/article'|g; s|\\\\\"/artikel\\\\\"|'/article'|g; s|href=\\\\\"/artikel\\\\\"|href=\\\\\"/article\\\\\"|g; s|\\\\`/artikel/|\\\\`/article/|g; s|canonical: '/artikel'|canonical: '/article'|g; s|'/berita'|'/news'|g; s|\\\\\"/berita\\\\\"|'/news'|g; s|href=\\\\\"/berita\\\\\"|href=\\\\\"/news\\\\\"|g; s|/berita/|/news/|g\")",
+      "Bash(sed -i 's|${BASE_URL}/artikel`|${BASE_URL}/article`|g' /home/joko/projects/website-kampus-sulawesi/app/article/[slug]/page.tsx)",
+      "Bash(sed -i 's|${BASE_URL}/berita`|${BASE_URL}/news`|g' \"/home/joko/projects/website-kampus-sulawesi/app/news/[id]/page.tsx\")"
     ],
     "additionalDirectories": [
       "/home/joko/projects/website-kampus-sulawesi/app/berita"

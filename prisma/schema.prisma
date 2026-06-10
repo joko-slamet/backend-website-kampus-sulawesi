@@ -77,6 +77,12 @@ model Lead {
   createdAt DateTime @default(now())
 }
 
+model SiteSettings {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
+}
+
 model Program {
   id            String   @id
   icon          String

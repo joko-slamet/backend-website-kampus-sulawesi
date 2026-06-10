@@ -93,9 +93,11 @@ model Program {
   accreditation String
   description   String
   highlights    String[]
+  careerPaths   String[]
+  degreeTitle   String   @default("")
   color         String
   bgGradient    String
-  alumni        String
+  lecturers     Json     @default("[]")
   status        String   @default("aktif")
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt

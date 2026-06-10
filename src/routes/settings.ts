@@ -7,7 +7,7 @@ import { asyncHandler } from '../middleware/asyncHandler';
 
 const router = Router();
 
-const SECTION_KEYS = ['hero', 'about', 'visiMisi', 'why', 'pmb', 'contact', 'footer'] as const;
+const SECTION_KEYS = ['hero', 'about', 'visiMisi', 'why', 'tujuan', 'pmb', 'contact', 'footer'] as const;
 type SectionKey = typeof SECTION_KEYS[number];
 
 // GET /api/settings — public, returns all sections

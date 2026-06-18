@@ -90,7 +90,9 @@ router.delete('/upload-image/:filename', requireAuth, (req: Request, res: Respon
 router.post('/generate', requireAuth, validate(generateArticleSchema), asyncHandler(async (req: Request, res: Response) => {
   const { topic, category } = req.body as { topic?: string; category?: string };
 
-  const generated = await generateArticle({ topic, category });
+  const topicsRow = await prisma.siteSettings.findUnique({ where: { key: 'article_topics' } });
+  const topics = topicsRow ? (JSON.parse(topicsRow.value) as string[]) : undefined;
+  const generated = await generateArticle({ topic, category, topics });
 
   const now = new Date();
   const dateStr = now.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });

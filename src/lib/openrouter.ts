@@ -7,6 +7,7 @@ const UPLOADS_DIR = path.join(process.cwd(), 'uploads');
 export interface GenerateArticleOptions {
   topic?: string;
   category?: string;
+  topics?: string[];
 }
 
 export interface GeneratedArticleData {
@@ -136,7 +137,7 @@ export interface GeneratedNewsContent {
   tag: string;
 }
 
-const NEWS_CATEGORIES = ['Akademik', 'Keuangan', 'Kemahasiswaan', 'Kepegawaian', 'Penelitian', 'Kegiatan', 'Umum'];
+const DEFAULT_ARTICLE_TOPICS = ['Akademik', 'Keuangan', 'Kemahasiswaan', 'Kepegawaian', 'Penelitian', 'Kegiatan', 'Umum'];
 
 export async function generateNewsContent(options: GenerateNewsContentOptions): Promise<GeneratedNewsContent> {
   const apiKey = process.env.OPENROUTER_API_KEY;
@@ -163,7 +164,7 @@ Balas dengan JSON valid satu baris:
 {"category":"...","tag":"...","content":"..."}
 
 Ketentuan:
-- category: pilih SATU dari [${NEWS_CATEGORIES.map(c => `"${c}"`).join(', ')}] yang paling sesuai dengan judul
+- category: pilih SATU dari [${DEFAULT_ARTICLE_TOPICS.map((t: string) => `"${t}"`).join(', ')}] yang paling sesuai dengan judul
 - tag: 1-2 kata singkat relevan, atau string kosong jika tidak ada
 - content: konten ${typeLabel} lengkap dalam HTML (gunakan <h2>, <p>, <ul><li>, <strong> secukupnya). Minimal 200 kata, informatif, sesuai judul, dalam Bahasa Indonesia. Jangan ulangi judulnya di dalam konten.`;
 
@@ -192,7 +193,7 @@ Ketentuan:
     throw new Error('Gagal mem-parsing respons AI sebagai JSON');
   }
 
-  const category = NEWS_CATEGORIES.includes(parsed.category) ? parsed.category : 'Umum';
+  const category = DEFAULT_ARTICLE_TOPICS.includes(parsed.category) ? parsed.category : DEFAULT_ARTICLE_TOPICS[0];
 
   return {
     content: parsed.content ?? '',
@@ -208,6 +209,9 @@ export async function generateArticle(options: GenerateArticleOptions): Promise<
   const client = new OpenRouter({ apiKey });
   const model = process.env.OPENROUTER_MODEL ?? 'google/gemma-2-9b-it:free';
 
+  const topics = options.topics?.length ? options.topics : DEFAULT_ARTICLE_TOPICS;
+  const topicList = topics.join(', ');
+
   const systemPrompt = `Kamu adalah editor konten resmi untuk website STIA YPA-AH "Abdul Haris" Makassar.
 
 Profil kampus:
@@ -219,12 +223,12 @@ Profil kampus:
 - Akreditasi: BAIK (BAN-PT)
 - Keunggulan: tata kelola pemerintahan, kebijakan publik, manajemen bisnis, administrasi negara, pelayanan publik, kepemimpinan organisasi
 
-Tugas: Pilih topik artikel yang relevan dengan kampus administrasi ini (kebijakan publik, tata kelola, manajemen bisnis, kehidupan mahasiswa, karier, riset administrasi, atau kegiatan kampus) lalu tulis konten yang informatif, menarik, dan profesional.
+Tugas: Pilih topik artikel dari kategori berikut: ${topicList}. Tulis konten yang informatif, menarik, dan profesional.
 Balas HANYA dengan JSON valid, tanpa markdown atau kode blok.`;
 
   const topicInstruction = options.topic
     ? `Tulis artikel dengan topik: "${options.topic}".`
-    : `Pilih sendiri topik artikel yang paling relevan dan segar. Variasikan — jangan ulangi topik yang sama berturut-turut.`;
+    : `Pilih sendiri topik yang paling relevan dan segar dari kategori: ${topicList}. Variasikan — jangan ulangi topik yang sama berturut-turut.`;
 
   // Request 1: metadata only (JSON kecil, tidak berisiko truncate)
   const metaPrompt = `${topicInstruction}

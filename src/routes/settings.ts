@@ -10,6 +10,49 @@ const router = Router();
 const SECTION_KEYS = ['hero', 'about', 'visiMisi', 'why', 'tujuan', 'pmb', 'contact', 'footer'] as const;
 type SectionKey = typeof SECTION_KEYS[number];
 
+const DEFAULT_ARTICLE_TOPICS = ['Akademik', 'Keuangan', 'Kemahasiswaan', 'Kepegawaian', 'Penelitian', 'Kegiatan', 'Umum'];
+
+// GET /api/settings/article-topics — public
+router.get(
+  '/article-topics',
+  asyncHandler(async (_req: Request, res: Response) => {
+    const row = await prisma.siteSettings.findUnique({ where: { key: 'article_topics' } });
+    if (!row) {
+      res.json({ topics: DEFAULT_ARTICLE_TOPICS });
+      return;
+    }
+    try {
+      res.json({ topics: JSON.parse(row.value) as string[] });
+    } catch {
+      res.json({ topics: DEFAULT_ARTICLE_TOPICS });
+    }
+  })
+);
+
+// PUT /api/settings/article-topics — admin only
+router.put(
+  '/article-topics',
+  requireAuth,
+  asyncHandler(async (req: Request, res: Response) => {
+    const { topics } = req.body as { topics?: unknown };
+    if (!Array.isArray(topics) || topics.some(t => typeof t !== 'string')) {
+      res.status(400).json({ message: 'topics harus berupa array string' });
+      return;
+    }
+    const filtered = (topics as string[]).map(t => t.trim()).filter(Boolean);
+    if (filtered.length === 0) {
+      res.status(400).json({ message: 'Minimal satu topik diperlukan' });
+      return;
+    }
+    await prisma.siteSettings.upsert({
+      where: { key: 'article_topics' },
+      update: { value: JSON.stringify(filtered) },
+      create: { key: 'article_topics', value: JSON.stringify(filtered) },
+    });
+    res.json({ topics: filtered });
+  })
+);
+
 // GET /api/settings — public, returns all sections
 router.get(
   '/',

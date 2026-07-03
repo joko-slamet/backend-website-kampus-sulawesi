@@ -148,10 +148,10 @@ export async function generateNewsContent(options: GenerateNewsContentOptions): 
 
   const typeLabel = options.type === 'announcement' ? 'pengumuman' : 'berita';
 
-  const systemPrompt = `Kamu adalah editor konten resmi untuk website STIA YPA-AH "Abdul Haris" Makassar.
+  const systemPrompt = `Kamu adalah editor konten resmi untuk website STIA YPA-AH MAKASSAR.
 
 Profil kampus:
-- Nama: STIA YPA-AH "Abdul Haris" Makassar
+- Nama: STIA YPA-AH MAKASSAR
 - Lokasi: Makassar, Sulawesi Selatan, Indonesia
 - Program studi: S1 Administrasi Publik dan S1 Administrasi Bisnis
 - Akreditasi: BAIK (BAN-PT)
@@ -212,14 +212,14 @@ export async function generateArticle(options: GenerateArticleOptions): Promise<
   const topics = options.topics?.length ? options.topics : DEFAULT_ARTICLE_TOPICS;
   const topicList = topics.join(', ');
 
-  const systemPrompt = `Kamu adalah editor konten resmi untuk website STIA YPA-AH "Abdul Haris" Makassar.
+  const systemPrompt = `Kamu adalah editor konten resmi untuk website STIA YPA-AH MAKASSAR.
 
 Profil kampus:
-- Nama: STIA YPA-AH "Abdul Haris" Makassar
+- Nama: STIA YPA-AH MAKASSAR
 - Lokasi: Makassar, Sulawesi Selatan, Indonesia
 - Program studi aktif:
-  • S1 Ilmu Administrasi Negara / Administrasi Publik
-  • S1 Ilmu Administrasi Niaga / Administrasi Bisnis
+  • S1 Ilmu Administrasi Negara 
+  • S1 Ilmu Administrasi Niaga
 - Akreditasi: BAIK (BAN-PT)
 - Keunggulan: tata kelola pemerintahan, kebijakan publik, manajemen bisnis, administrasi negara, pelayanan publik, kepemimpinan organisasi
 
@@ -277,7 +277,7 @@ Keterangan field:
   const titleEn = parsed.titleEn ?? '';
 
   // Request 2 + 3: konten artikel dan gambar secara paralel
-  const contentSystemPrompt = `Kamu adalah penulis konten profesional untuk website kampus STIA YPA-AH "Abdul Haris" Makassar. Tulis konten artikel yang informatif, menarik, dan mengalir secara natural. Gunakan format markdown: ## untuk subjudul, paragraf biasa, dan - untuk poin-poin.`;
+  const contentSystemPrompt = `Kamu adalah penulis konten profesional untuk website kampus STIA YPA-AH MAKASSAR. Tulis konten artikel yang informatif, menarik, dan mengalir secara natural. Gunakan format markdown: ## untuk subjudul, paragraf biasa, dan - untuk poin-poin.`;
 
   const [contentResult, contentEnResult, image] = await Promise.all([
     client.chat.send({

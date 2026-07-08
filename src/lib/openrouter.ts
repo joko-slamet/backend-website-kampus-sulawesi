@@ -61,8 +61,8 @@ async function generateImage(imagePrompt: string): Promise<string | null> {
       headers: {
         Authorization: `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
-        'HTTP-Referer': process.env.APP_URL ?? 'http://localhost:4000',
-        'X-Title': 'STIA Abdul Haris CMS',
+        'HTTP-Referer': process.env.APP_URL ?? 'https://stiaahmakassar.ac.id',
+        'X-Title': 'STIA YPA-AH MAKASSAR CMS',
       },
       body: JSON.stringify({
         model: imageModel,
@@ -169,8 +169,8 @@ Ketentuan:
 - content: konten ${typeLabel} lengkap dalam HTML (gunakan <h2>, <p>, <ul><li>, <strong> secukupnya). Minimal 200 kata, informatif, sesuai judul, dalam Bahasa Indonesia. Jangan ulangi judulnya di dalam konten.`;
 
   const result = await client.chat.send({
-    httpReferer: process.env.APP_URL ?? 'http://localhost:4000',
-    appTitle: 'STIA Abdul Haris CMS',
+    httpReferer: process.env.APP_URL ?? 'https://stiaahmakassar.ac.id',
+    appTitle: 'STIA YPA-AH MAKASSAR CMS',
     chatRequest: {
       model,
       messages: [
@@ -247,8 +247,8 @@ Keterangan field:
 - imagePrompt: deskripsi foto editorial profesional dalam Bahasa Inggris, max 30 kata`;
 
   const metaResult = await client.chat.send({
-    httpReferer: process.env.APP_URL ?? 'http://localhost:4000',
-    appTitle: 'STIA Abdul Haris CMS',
+    httpReferer: process.env.APP_URL ?? 'https://stiaahmakassar.ac.id',
+    appTitle: 'STIA YPA-AH MAKASSAR CMS',
     chatRequest: {
       model,
       messages: [
@@ -281,8 +281,8 @@ Keterangan field:
 
   const [contentResult, contentEnResult, image] = await Promise.all([
     client.chat.send({
-      httpReferer: process.env.APP_URL ?? 'http://localhost:4000',
-      appTitle: 'STIA Abdul Haris CMS',
+      httpReferer: process.env.APP_URL ?? 'https://stiaahmakassar.ac.id',
+      appTitle: 'STIA YPA-AH MAKASSAR CMS',
       chatRequest: {
         model,
         messages: [
@@ -294,8 +294,8 @@ Keterangan field:
       },
     }),
     client.chat.send({
-      httpReferer: process.env.APP_URL ?? 'http://localhost:4000',
-      appTitle: 'STIA Abdul Haris CMS',
+      httpReferer: process.env.APP_URL ?? 'https://stiaahmakassar.ac.id',
+      appTitle: 'STIA YPA-AH MAKASSAR CMS',
       chatRequest: {
         model,
         messages: [

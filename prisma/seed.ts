@@ -8,19 +8,19 @@ async function main() {
   // Admin user
   const hashedPassword = await bcrypt.hash('kampus2026;', 10);
   await prisma.user.upsert({
-    where: { email: 'admin@stiaabdulharis.ac.id' },
+    where: { email: 'admin@stiaahmakassar.ac.id' },
     update: {},
     create: {
-      email: 'admin@stiaabdulharis.ac.id',
+      email: 'admin@stiaahmakassar.ac.id',
       password: hashedPassword,
-      name: 'Admin STIA Abdul Haris',
+      name: 'Admin STIA YPA-AH MAKASSAR',
       role: 'admin',
     },
   });
   console.log('✓ Admin user seeded');
 
   console.log('\nSeed completed!');
-  console.log('Login: admin@stiaabdulharis.ac.id / kampus2026;');
+  console.log('Login: admin@stiaahmakassar.ac.id / kampus2026;');
 }
 
 main()

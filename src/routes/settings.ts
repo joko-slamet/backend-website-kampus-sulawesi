@@ -131,8 +131,8 @@ Rules:
 ${JSON.stringify(idContent, null, 2)}`;
 
     const result = await client.chat.send({
-      httpReferer: process.env.APP_URL ?? 'http://localhost:4000',
-      appTitle: 'STIA Abdul Haris CMS',
+      httpReferer: process.env.APP_URL ?? 'https://stiaahmakassar.ac.id',
+      appTitle: 'STIA YPA-AH MAKASSAR CMS',
       chatRequest: {
         model,
         messages: [
